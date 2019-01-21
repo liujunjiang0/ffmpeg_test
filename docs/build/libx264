@@ -1,0 +1,37 @@
+Download source file:
+    git clone https://git.videolan.org/git/x264.git
+
+Configure:
+    ./configure --disable-cli --enable-shared --bit-depth=8 --disable-asm --disable-avs --disable-swscale --disable-lavf --disable-ffms --disable-gpac --disable-lsmash
+    Make a shared library with bit-depth=8. The libx264 library can be configured with '--bit-depth=all' supporting 8 & 10 bit-depth at the same time, but ffmpeg only supports one bit-depth in a particular build(see https://ffmpeg.org/ffmpeg-all.html part 16.9). Here I choose '--disable-asm' cause I didn't install nasm tool, if you want this option, make sure nasm has been installed already. Disable all external libraries and x264 command tool, using the encode feature only.
+
+Build & Install:
+    make 
+    make install
+    Install path can be configured with '--prefix=PREFIX' and '--libdir=PREFIX/lib' options, or you can copy the file that you need to wherever you want.
+
+Ffmpeg build:
+    ./configure --disable-static --enable-shared --disable-asm --disable-programs --disable-doc --disable-everything --enable-encoder=libx264 --enable-bsf=h264_mp4toannexb --enable-muxer=h264 --enable-protocol=file,udp --enable-gpl --enable-libx264 --extra-cflags='-I/usr/local/include' --extra-ldflags='-L/usr/local/lib' --extra-libs='-lx264'
+    Only build libx264 encoder, h264 muxer, file & udp protocol. h264_mp4toannexb may be needed by h264 muxer.
+
+Error fix:
+    error: ‘x264_bit_depth’ undeclared (first use in this function);
+
+    Because the latest x264 library had removed ‘x264_bit_depth’ variable, after commit e9a5903edf8ca59ef20e6f4894c196f135af735e. But ffmpeg with version 3.4 is not compatible with this.
+    Two ways to fix this error:
+    1. Use the latest ffmepg code;
+    2. Reset the x264 code to commit below, and build again.
+        git reset --hard e9a5903edf8ca59ef20e6f4894c196f135af735e
+
+Conform:
+    You can add '--enable-ffmpeg' option to configure command to get ffmpeg command tool, then use it to check something.
+    ffmpeg -encoders
+    ffmpeg -muxers
+    ffmpeg -protocols
+    ffmpeg -bsfs
+    Make sure that only libx264 encoder & h264 muxer & file and udp protocols & h264_mp4toannexb bsf are included.
+
+Debug:
+    If you wanna debug the codes, please add "--enable-debug" & "extra-cflags='-g'" when running configure command. And copy the libs to corresponding path, not 'make install' which will strip the debug infos.
+
+Done
